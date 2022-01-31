@@ -18,6 +18,11 @@
 #' @return Saved CSV files in current working directory.
 #' @family datafiles
 #' @export
+#' @examples 
+#' \dontrun{
+#' x <- lookup_tweets("1484524996701855747")
+#' write_as_csv(x, tempfile(fileext = ".csv"))
+#' }
 write_as_csv <- function(x, file_name,
                          prepend_ids = TRUE,
                          na = "",
@@ -60,8 +65,8 @@ save_as_csv <- function(x, file_name,
 #' @param x Data frame with list columns or converted-to-character (flattened)
 #'   columns.
 #' @return If flattened, then data frame where non-recursive list
-#'   columns---that is, list columns that contain only atomic, or non-list,
-#'   elements---have been converted to character vectors. If unflattened,
+#'   columns - that is, list columns that contain only atomic, or non-list,
+#'   elements - have been converted to character vectors. If unflattened,
 #'   this function splits on spaces columns originally returned as lists
 #'   by functions in rtweet package. See details for more information.
 #'
@@ -83,25 +88,39 @@ save_as_csv <- function(x, file_name,
 #' @export
 #' @rdname flatten
 #' @family datafiles
+#' @examples 
+#' \dontrun{
+#' x <- lookup_tweets("1484524996701855747")
+#' flatten(x)
+#' }
 flatten <- function(x) {
   stopifnot(is.data.frame(x))
-  lst <- which(vapply(x, is.list,
-    FUN.VALUE = logical(1), USE.NAMES = FALSE))
-  atom <- which(vapply(x[lst], function(.) all(
-    vapply(., is.atomic, FUN.VALUE = logical(1), USE.NAMES = FALSE)
-  ), FUN.VALUE = logical(1), USE.NAMES = FALSE))
-  la <- lst[atom]
-  x[la] <- lapply(x[la], function(a)
-    vapply(a, function(b)
-      ifelse(length(b) == 0 | (length(b) == 1 && is.na(b)), "",
-        paste(b, collapse = " ")),
-      FUN.VALUE = character(1), USE.NAMES = FALSE))
-  x[la] <- lapply(x[la], function(.) ifelse(. == "", NA, .))
-  if (any(vapply(x, is.recursive,
-    FUN.VALUE = logical(1), USE.NAMES = FALSE))) {
-    warning("data frame still contains recursive columns!")
+  internal_flatten(x)
+}
+
+internal_flatten <- function(y) {
+  lst <- vapply(y, is.list, FUN.VALUE = logical(1), USE.NAMES = FALSE)
+  len <- max(lengths(y[lst]))
+  # For each list of the data.frame
+  for (w in which(lst)) {
+    # If they have another list
+    lst2 <- vapply(y[[w]], is.list, FUN.VALUE = logical(1), USE.NAMES = FALSE)
+    if (any(lst2)) {
+      # Recursive call
+      y[[w]][lst2] <- internal_flatten(y[[w]][lst2])
+      # Unlist if it is a list
+    } else if (is(y[[w]], "list") || is(y[[w]], "AsIs")) {
+      return(unlist(y[[w]], use.names = FALSE, recursive = FALSE))
+      # If not prepare data.frame of same size as other on the same level
+    } else {
+      browser()
+      new_colnames <- paste(names(y)[w], colnames(y[[w]]), sep = ".")
+      colnames(y[w]) <- new_colnames
+      return(y[[w]][rep(nrow(y[[w]]), length.out = len), ])
+    }
   }
-  x
+  do.call("cbind", y)
+  y
 }
 
 #' @export

@@ -78,7 +78,7 @@ find_id <- function(x, arg_name) {
     x
   } else if (is.data.frame(x)) {
     if (!has_name(x, "id"))  {
-#     abort(paste0("`", arg_name, "` must contain a `id` column"))
+      abort(paste0("`", arg_name, "` must contain a `id` column"))
     }
     y <- x$id
     if (is.factor(y)) {
@@ -86,6 +86,6 @@ find_id <- function(x, arg_name) {
     }
     y
   } else {
-#    abort(paste0("`", arg_name, "` must be a character vector or data frame"))
+    abort(paste0("`", arg_name, "` must be a character vector or data frame"))
   }
 }

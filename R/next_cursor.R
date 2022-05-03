@@ -62,18 +62,18 @@ previous_cursor <- function(x) {
 #' newer <- search_tweets("#rstats", since_id = tw)
 #' }
 max_id <- function(x) {
-  id <- find_id(x) #, "max_id")
+  id <- find_id(x, "max_id")
   as.character(min(bit64::as.integer64(id)) - 1L)
 }
 
 #' @rdname next_cursor
 #' @export
 since_id <- function(x) {
-  id <- find_id(x) #, "since_id")
+  id <- find_id(x, "since_id")
   as.character(max(bit64::as.integer64(id)))
 }
 
-find_id <- function(x) {
+find_id <- function(x, arg_name) {
   if (is.character(x)) {
     x
   } else if (is.data.frame(x)) {

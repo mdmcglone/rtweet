@@ -73,7 +73,7 @@ since_id <- function(x) {
   as.character(max(bit64::as.integer64(id)))
 }
 
-find_id <- function(x)) {
+find_id <- function(x) {
   if (is.character(x)) {
     x
   } else if (is.data.frame(x)) {
